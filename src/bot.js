@@ -79,14 +79,22 @@ async function sendRich(api, chatId, placeholderId, md) {
  */
 export function startBot(token, app, publicUrl) {
   const bot = new Bot(token);
+  // Telegram opens Mini Apps only over https.
+  const siteUrl = /^https:\/\//.test(publicUrl || "") ? publicUrl.replace(/\/$/, "") + "/" : "";
+  const siteButton = () => siteUrl && new InlineKeyboard().webApp("🌐 Saytni ochish", siteUrl);
 
   bot.command("start", ctx => ctx.reply(
     "Assalomu alaykum! Men <b>Ustoz Maslahatchisi</b>man.\n\n" +
     "Sinfingizdagi muammoni yozing: men dunyo maktablarida sinalgan, tadqiqot bilan isbotlangan " +
     `${METHODS.length} ta metod va kitob asosida aniq yechim va ertangi dars rejasini beraman.\n\n` +
     "<b>Masalan:</b> <i>7-sinf, 32 oʻquvchi. Tushuntirayotganimda orqa partalar gaplashadi, savolga doim 3–4 kishi javob beradi.</i>\n\n" +
-    "Buyruqlar:\n/sinf — sinfingiz haqida maʼlumot (yosh, fan, hajm)\n/metodlar — metodlar kutubxonasi\n/qidir — metod qidirish\n/yangi — yangi suhbat",
-    { parse_mode: "HTML" }));
+    "Buyruqlar:\n/sinf — sinfingiz haqida maʼlumot (yosh, fan, hajm)\n/metodlar — metodlar kutubxonasi\n/qidir — metod qidirish\n/yangi — yangi suhbat" +
+    (siteUrl ? "\n/sayt — veb-saytni ochish" : ""),
+    { parse_mode: "HTML", reply_markup: siteButton() || undefined }));
+
+  bot.command("sayt", ctx => siteUrl
+    ? ctx.reply("Metodlar kutubxonasi va maslahatchi saytini shu yerda, Telegram ichida oching:", { reply_markup: siteButton() })
+    : ctx.reply("Sayt manzili hali sozlanmagan."));
 
   bot.command("yangi", ctx => {
     const c = chat(ctx.chat.id);
@@ -199,8 +207,13 @@ export function startBot(token, app, publicUrl) {
     { command: "sinf", description: "Sinfingiz haqida maʼlumot" },
     { command: "metodlar", description: "Metodlar kutubxonasi" },
     { command: "qidir", description: "Metod qidirish" },
-    { command: "yangi", description: "Yangi suhbat" }
+    { command: "yangi", description: "Yangi suhbat" },
+    ...(siteUrl ? [{ command: "sayt", description: "Veb-saytni ochish" }] : [])
   ]).catch(() => {});
+
+  // The menu button next to the message field opens the site as a Mini App.
+  if (siteUrl) bot.api.setChatMenuButton({ menu_button: { type: "web_app", text: "Sayt", web_app: { url: siteUrl } } })
+    .catch(e => console.warn("Menyu tugmasi oʻrnatilmadi:", e.message));
 
   const announce = me => {
     console.log(`Telegram bot: @${me.username}`);
