@@ -1,0 +1,20 @@
+{
+  "name": "ustoz-maslahatchisi",
+  "version": "1.0.0",
+  "description": "Oʻqituvchilar uchun AI maslahatchi: veb-sayt va Telegram bot",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "grammy": "^1.38.3"
+  }
+}
