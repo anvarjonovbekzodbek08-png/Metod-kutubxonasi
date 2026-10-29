@@ -179,7 +179,11 @@ $("search").addEventListener("input", e => { term = e.target.value; renderList()
 
 // ---------- boot ----------
 loadCtx(); load(); render(); renderCats(); renderList();
+// Opened from the bot as a Mini App: use the full screen, and skip the link back to the bot.
+const tgApp = window.Telegram?.WebApp;
+const inTelegram = Boolean(tgApp?.initData);
+if (inTelegram) { tgApp.ready(); tgApp.expand(); }
 fetch("/api/config").then(r => r.json()).then(c => {
-  if (!c.telegram) return;
+  if (!c.telegram || inTelegram) return;
   const a = $("tg"); a.href = "https://t.me/" + encodeURIComponent(c.telegram); a.textContent = "Telegram botimiz: @" + c.telegram; a.hidden = false;
 }).catch(() => {});
