@@ -1,4 +1,5 @@
 // Telegram bot: the same advisor and knowledge base as the website.
+import crypto from "node:crypto";
 import { Bot, InlineKeyboard, GrammyError } from "grammy";
 import { advise, cleanHistory, errorCode } from "./advisor.js";
 import { CATS, METHODS } from "./knowledge.js";
@@ -71,7 +72,12 @@ async function sendRich(api, chatId, placeholderId, md) {
   }
 }
 
-export function startBot(token) {
+/**
+ * @param {string} token
+ * @param {import("express").Express} app  the website's server, used for webhook mode
+ * @param {string} [publicUrl] https address of the site; when set, Telegram delivers messages by webhook
+ */
+export function startBot(token, app, publicUrl) {
   const bot = new Bot(token);
 
   bot.command("start", ctx => ctx.reply(
@@ -196,5 +202,28 @@ export function startBot(token) {
     { command: "yangi", description: "Yangi suhbat" }
   ]).catch(() => {});
 
-  bot.start({ onStart: me => console.log(`Telegram bot: @${me.username}`) });
+  const announce = me => {
+    console.log(`Telegram bot: @${me.username}`);
+    process.env.TELEGRAM_BOT_USERNAME ||= me.username; // the site links to the bot
+  };
+
+  if (!publicUrl) {
+    bot.start({ onStart: announce });
+    return;
+  }
+
+  // Webhook mode: Telegram sends each message to our server. On hosts that sleep when idle
+  // (Render's free plan) the incoming request wakes the server, which polling cannot do.
+  const secret = crypto.createHash("sha256").update("webhook:" + token).digest("hex").slice(0, 32);
+  const path = "/tg/" + secret.slice(0, 16);
+  app.post(path, (req, res) => {
+    if (req.get("X-Telegram-Bot-Api-Secret-Token") !== secret) return res.sendStatus(401);
+    // Answer Telegram at once: a full answer can take a minute, and Telegram resends updates it waits too long for.
+    res.sendStatus(200);
+    bot.handleUpdate(req.body).catch(e => console.error("Telegram update error:", e));
+  });
+  bot.init()
+    .then(() => bot.api.setWebhook(publicUrl.replace(/\/$/, "") + path, { secret_token: secret, drop_pending_updates: false }))
+    .then(() => { announce(bot.botInfo); console.log("Webhook rejimi"); })
+    .catch(e => console.error("Webhook oʻrnatilmadi:", e));
 }

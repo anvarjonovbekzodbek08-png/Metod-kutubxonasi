@@ -29,20 +29,18 @@ Sayt: http://localhost:3000. Token berilgan boʻlsa, bot ham shu zahoti ishlaydi
 
 ## Internetga joylash
 
-### Railway (tavsiya etiladi)
+### Render (tavsiya etiladi, bepul tarif ham ishlaydi)
 
-1. Loyihani GitHub'ga yuklang.
-2. [railway.com](https://railway.com) → *New Project* → *Deploy from GitHub repo* → shu repozitoriyni tanlang.
-3. *Variables* boʻlimiga `.env.example` dagi qiymatlarni kiriting (`ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`).
-4. *Settings → Networking → Generate Domain* tugmasi bilan saytga manzil oling.
+1. [render.com](https://render.com) → *New* → *Blueprint* → **Metod-kutubxonasi** repozitoriyini tanlang. Render `render.yaml` faylini o'qib, xizmatni o'zi sozlaydi.
+   (Yoki *New → Web Service*: Build command `npm install`, Start command `npm start`.)
+2. Render ikkita qiymatni so'raydi: `ANTHROPIC_API_KEY` va `TELEGRAM_BOT_TOKEN`. Ularni kiriting va *Apply* tugmasini bosing.
+3. Deploy tugagach, sahifaning tepasida `https://metod-kutubxonasi-xxxx.onrender.com` ko'rinishidagi manzil chiqadi. Sayt shu manzilda ishlaydi, botga esa `/start` yozing.
 
-### Render
+Render'da bot **webhook** rejimida ishlaydi: Telegram har bir xabarni serverga o'zi yuboradi va uxlab qolgan serverni uyg'otadi. Server o'zini har 10 daqiqada tekshirib turadi, shuning uchun bepul tarifda ham deyarli uxlamaydi. Bepul tarifda uzoq tanaffusdan keyingi birinchi javob 30–60 soniya kechikishi mumkin.
 
-1. [render.com](https://render.com) → *New* → *Web Service* → GitHub repozitoriyni ulang.
-2. Build command: `npm install`, Start command: `npm start`.
-3. *Environment* boʻlimiga oʻzgaruvchilarni kiriting.
+### Boshqa hosting
 
-Render'ning bepul tarifida server 15 daqiqa harakatsizlikdan keyin uxlab qoladi va bot javob bermay qoʻyadi. Bot doim ishlashi uchun pullik tarif yoki Railway kerak.
+Har qanday Node.js hostingda ishlaydi (Railway, Fly.io, VPS). Saytning https manzilini `PUBLIC_URL` o'zgaruvchisiga yozing, shunda bot webhook rejimida ishlaydi. `PUBLIC_URL` berilmasa, bot polling rejimida ishlaydi. Bu rejim faqat doim yoqiq turadigan serverda ishonchli.
 
 ## Xarajat
 
